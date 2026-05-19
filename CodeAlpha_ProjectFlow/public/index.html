@@ -574,10 +574,6 @@ body::before {
   max-height: calc(100vh - 120px);
   animation: slideInRight 0.4s cubic-bezier(0.16,1,0.3,1) both;
 }
-.kanban-col:nth-child(1) { animation-delay: 0s; }
-.kanban-col:nth-child(2) { animation-delay: 0.06s; }
-.kanban-col:nth-child(3) { animation-delay: 0.12s; }
-.kanban-col:nth-child(4) { animation-delay: 0.18s; }
 
 .col-header {
   display: flex;
@@ -840,6 +836,7 @@ body::before {
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
   font-size: 13px;
+  cursor: pointer;
 }
 .notif-item:hover { background: var(--bg-2); }
 .notif-item.unread { background: rgba(91,106,240,0.05); }
@@ -954,7 +951,6 @@ body::before {
 </head>
 <body>
 
-<!-- AUTH VIEW -->
 <div id="authView" class="view active">
   <div class="auth-screen">
     <div class="auth-bg-grid"></div>
@@ -982,11 +978,9 @@ body::before {
   </div>
 </div>
 
-<!-- APP VIEW -->
 <div id="appView" class="view">
   <div class="app-shell">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-logo">
         <div class="sidebar-logo-icon">
@@ -997,7 +991,7 @@ body::before {
 
       <button class="nav-item active" id="navDash" onclick="showDash()">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Overview
+        <span style="flex:1">Overview</span>
       </button>
 
       <div class="sidebar-section-label">Projects</div>
@@ -1005,9 +999,9 @@ body::before {
 
       <div class="sidebar-spacer"></div>
 
-      <button class="nav-item" onclick="toggleNotifPanel();" style="position:relative">
+      <button class="nav-item" onclick="toggleNotifPanel(event);" style="position:relative">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-        Notifications
+        <span style="flex:1">Notifications</span>
         <span class="notif-badge" id="notifBadge" style="position:static;width:16px;height:16px;font-size:9px;display:none"></span>
       </button>
 
@@ -1024,13 +1018,11 @@ body::before {
       </div>
     </aside>
 
-    <!-- MAIN -->
     <main class="main" id="mainArea"></main>
 
   </div>
 </div>
 
-<!-- NOTIF PANEL -->
 <div class="notif-panel" id="notifPanel">
   <div class="notif-panel-header">
     <span>Notifications</span>
@@ -1039,7 +1031,6 @@ body::before {
   <div class="notif-list" id="notifList"><div style="padding:24px;text-align:center;font-size:13px;color:var(--text-3)">No notifications</div></div>
 </div>
 
-<!-- NEW PROJECT MODAL -->
 <div class="overlay" id="newProjectOverlay" onclick="closeBd(event,'newProjectOverlay')">
   <div class="modal">
     <div class="modal-header"><div class="modal-title">New project</div><button class="btn-icon btn" onclick="closeOverlay('newProjectOverlay')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
@@ -1047,578 +1038,557 @@ body::before {
       <div id="npMsg"></div>
       <div class="fg"><label>Project name</label><input type="text" id="npName" placeholder="e.g. Website Redesign"></div>
       <div class="fg"><label>Description</label><textarea id="npDesc" rows="2" placeholder="What is this project about?"></textarea></div>
-      <div class="fg"><label>Colour</label><div class="color-row" id="colorRow"></div></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeOverlay('newProjectOverlay')">Cancel</button><button class="btn btn-primary" onclick="createProject()">Create project</button></div>
-  </div>
-</div>
-
-<!-- TASK FORM MODAL -->
-<div class="overlay" id="taskFormOverlay" onclick="closeBd(event,'taskFormOverlay')">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="tfTitle">New task</div><button class="btn-icon btn" onclick="closeOverlay('taskFormOverlay')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body">
-      <div id="tfMsg"></div>
-      <div class="fg"><label>Task title</label><input type="text" id="tfName" placeholder="What needs to be done?"></div>
-      <div class="fg"><label>Description</label><textarea id="tfDesc" rows="2" placeholder="Optional details..."></textarea></div>
-      <div class="two-col">
-        <div class="fg"><label>Status</label><select id="tfStatus"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select></div>
-        <div class="fg"><label>Priority</label><select id="tfPriority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>
-        <div class="fg"><label>Assignee</label><select id="tfAssignee"><option value="">Unassigned</option></select></div>
-        <div class="fg"><label>Due date</label><input type="date" id="tfDue"></div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeOverlay('taskFormOverlay')">Cancel</button><button class="btn btn-primary" id="tfBtn" onclick="submitTask()">Create task</button></div>
-  </div>
-</div>
-
-<!-- TASK DETAIL MODAL -->
-<div class="overlay" id="taskDetailOverlay" onclick="closeBd(event,'taskDetailOverlay')">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title" id="tdTitle"></div>
-      <button class="btn-icon btn" onclick="closeOverlay('taskDetailOverlay')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div id="tdDesc" style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:20px"></div>
-      <div class="meta-grid">
-        <div class="meta-item"><label>Status</label><div class="meta-value" id="tdStatus"></div></div>
-        <div class="meta-item"><label>Priority</label><div class="meta-value" id="tdPriority"></div></div>
-        <div class="meta-item"><label>Assignee</label><div class="meta-value" id="tdAssignee"></div></div>
-        <div class="meta-item"><label>Due date</label><div class="meta-value" id="tdDue"></div></div>
-        <div class="meta-item"><label>Created by</label><div class="meta-value" id="tdCreator"></div></div>
-        <div class="meta-item"><label>Created</label><div class="meta-value" id="tdCreated"></div></div>
-      </div>
-      <div style="font-size:11px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-3);margin-bottom:12px">Comments</div>
-      <div class="comment-list" id="commentList"></div>
-      <div class="comment-input-row">
-        <div class="avatar avatar-sm" id="commentAv"></div>
-        <textarea placeholder="Add a comment... (Ctrl+Enter to post)"></textarea>
-        <button class="btn btn-primary btn-sm" onclick="submitComment()">Post</button>
-      </div>
+      <div class="fg"><label>Colour</label><div class="color-row" id="npColors"></div></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" onclick="deleteCurrentTask()">Delete task</button>
-      <button class="btn btn-ghost btn-sm" onclick="closeOverlay('taskDetailOverlay');openEditTask()">Edit</button>
+      <button class="btn btn-secondary" onclick="closeOverlay('newProjectOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitProject()">Create Project</button>
     </div>
   </div>
 </div>
 
-<!-- MEMBERS MODAL -->
-<div class="overlay" id="membersOverlay" onclick="closeBd(event,'membersOverlay')">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title">Team members</div><button class="btn-icon btn" onclick="closeOverlay('membersOverlay')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+<div class="overlay" id="taskOverlay" onclick="closeBd(event,'taskOverlay')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="badge" id="mTaskStatus"></div>
+      <button class="btn-icon btn" onclick="closeOverlay('taskOverlay')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
     <div class="modal-body">
-      <div class="member-list" id="memberList"></div>
-      <div class="fg">
-        <label>Add member</label>
-        <input type="text" id="memberSearch" placeholder="Search by name or email..." oninput="searchUsers()">
-        <div class="search-results" id="searchResults"></div>
+      <h2 id="mTaskTitle" style="font-size:20px; font-weight:600; margin-bottom:16px;"></h2>
+      <div class="meta-grid">
+        <div class="meta-item"><label>Assignee</label><div class="meta-value" id="mTaskAssignee"></div></div>
+        <div class="meta-item"><label>Due Date</label><div class="meta-value" id="mTaskDue"></div></div>
+        <div class="meta-item"><label>Priority</label><div class="meta-value" id="mTaskPriority"></div></div>
+      </div>
+      <div style="margin-bottom:24px;">
+        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-3); margin-bottom:6px;">Description</h4>
+        <p id="mTaskDesc" style="color:var(--text-2); font-size:13px; line-height:1.6;"></p>
+      </div>
+      <div style="border-top:1px solid var(--border); padding-top:20px;">
+        <h4 style="font-size:12px; font-weight:600; margin-bottom:12px;">Activity</h4>
+        <div class="comment-list" id="mCommentList"></div>
+        <div class="comment-input-row">
+          <textarea id="mNewComment" placeholder="Write a comment..."></textarea>
+          <button class="btn btn-primary" id="mCommentBtn">Post</button>
+        </div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeOverlay('membersOverlay')">Done</button></div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let currentUser=null, currentProject=null, allProjects=[], allMembers=[], allTasks=[];
-let editingTaskId=null, currentTask=null, searchTimeout=null;
-const COLORS=['#5b6af0','#ec4899','#f97316','#22c55e','#eab308','#a855f7','#ef4444','#06b6d4'];
-const STATUS_LABELS={todo:'To Do',inprogress:'In Progress',review:'In Review',done:'Done'};
-const commentTextarea = () => document.querySelector('#taskDetailOverlay textarea');
+let currentUser = null;
+let currentProject = null;
+let projects = [];
+let tasks = [];
+let ws = null;
+let selectedColor = '#5b6af0';
 
-// ── API ───────────────────────────────────────────────────────────────────────
-async function api(method,url,body){
-  const opts={method,headers:{'Content-Type':'application/json'},credentials:'include'};
-  if(body) opts.body=JSON.stringify(body);
-  const res=await fetch(url,opts);
-  const data=await res.json();
-  if(!res.ok) throw new Error(data.error||'Request failed');
-  return data;
-}
+const colors = ['#5b6af0', '#7c3aed', '#06b6d4', '#22c55e', '#eab308', '#ef4444', '#f43f5e', '#a855f7'];
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
-function toast(msg,type=''){
-  const wrap=document.getElementById('toastWrap');
-  const el=document.createElement('div');
-  el.className=`toast${type?' '+type:''}`;
-  const icon=type==='green'
-    ?'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-    :type==='red'
-    ?'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-    :'';
-  el.innerHTML=icon+msg;
-  wrap.appendChild(el);
-  requestAnimationFrame(()=>el.classList.add('show'));
-  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},2600);
-}
-
-// ── AUTH ──────────────────────────────────────────────────────────────────────
-let isLogin=true;
-function toggleAuth(){
-  isLogin=!isLogin;
-  document.getElementById('authTitle').textContent=isLogin?'Welcome back':'Create account';
-  document.getElementById('authSub').textContent=isLogin?'Sign in to your workspace':'Join your team on ProjectFlow';
-  document.getElementById('aNameG').style.display=isLogin?'none':'block';
-  document.getElementById('aBtn').textContent=isLogin?'Sign in':'Create account';
-  document.getElementById('aToggle').textContent=isLogin?"Don't have an account? Create one":'Already have an account? Sign in';
-  document.getElementById('authMsg').innerHTML='';
-}
-
-async function handleAuth(){
-  const email=document.getElementById('aEmail').value.trim();
-  const pass=document.getElementById('aPass').value;
-  const name=document.getElementById('aName').value.trim();
-  const msg=document.getElementById('authMsg');
-  const btn=document.getElementById('aBtn');
-  if(!email||!pass){msg.innerHTML='<div class="msg error">Please fill in all fields.</div>';return;}
-  btn.disabled=true;btn.textContent='Please wait...';
-  try{
-    let data;
-    if(isLogin){data=await api('POST','/api/auth/login',{email,password:pass});}
-    else{
-      if(!name){msg.innerHTML='<div class="msg error">Name is required.</div>';return;}
-      data=await api('POST','/api/auth/register',{name,email,password:pass});
-    }
-    currentUser=data.user;enterApp();
-  }catch(e){msg.innerHTML=`<div class="msg error">${e.message}</div>`;}
-  finally{btn.disabled=false;btn.textContent=isLogin?'Sign in':'Create account';}
-}
-
-function enterApp(){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('appView').classList.add('active');
-  document.getElementById('sidebarAv').textContent=currentUser.name.charAt(0).toUpperCase();
-  document.getElementById('sidebarName').textContent=currentUser.name;
-  document.getElementById('sidebarRole').textContent=currentUser.role;
-  document.getElementById('commentAv').textContent=currentUser.name.charAt(0).toUpperCase();
-  showDash();
-  loadNotifications();
-}
-
-async function logoutUser(){
-  try{await api('POST','/api/auth/logout');}catch{}
-  currentUser=null;currentProject=null;
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('authView').classList.add('active');
-}
-
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function setActiveNav(id){
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById(id)?.classList.add('active');
-}
-
-async function showDash(){
-  setActiveNav('navDash');
-  currentProject=null;
-  const main=document.getElementById('mainArea');
-  main.innerHTML=`
-    <div class="topbar"><div class="topbar-title">Overview</div><button class="btn btn-primary btn-sm" onclick="openNewProject()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New project</button></div>
-    <div class="dash-content">
-      <div class="dash-hero animate-fadeUp">
-        <div class="dash-hero-label">Workspace</div>
-        <h1>Good to see you,<br>${currentUser.name.split(' ')[0]}.</h1>
-        <p>Here's what's happening across your projects.</p>
-        <button class="btn btn-primary" onclick="openNewProject()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Create project
-        </button>
-      </div>
-      <div class="stats-grid" id="dashStats"><div class="stat-card shimmer" style="height:80px"></div><div class="stat-card shimmer" style="height:80px"></div><div class="stat-card shimmer" style="height:80px"></div></div>
-      <div class="section-title animate-fadeUp-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        All projects
-      </div>
-      <div class="project-cards-grid animate-fadeUp-3" id="projectsGrid"><div class="loader"><div class="spinner"></div></div></div>
-    </div>`;
-  await loadProjects();
-}
-
-async function loadProjects(){
-  try{
-    const data=await api('GET','/api/projects');
-    allProjects=data.projects;
-    // Stats
-    const totalTasks=allProjects.reduce((s,p)=>s+(p.task_count||0),0);
-    document.getElementById('dashStats').innerHTML=`
-      <div class="stat-card animate-fadeUp-1"><div class="stat-num">${allProjects.length}</div><div class="stat-label">Projects</div></div>
-      <div class="stat-card animate-fadeUp-2"><div class="stat-num">${totalTasks}</div><div class="stat-label">Total tasks</div></div>
-      <div class="stat-card animate-fadeUp-3"><div class="stat-num">${allProjects.reduce((s,p)=>s+(p.member_count||0),0)}</div><div class="stat-label">Team members</div></div>`;
-    const grid=document.getElementById('projectsGrid');
-    if(!allProjects.length){
-      grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><p>No projects yet. Create your first one.</p></div>`;
-      return;
-    }
-    grid.innerHTML=allProjects.map((p,i)=>`
-      <div class="project-card" style="animation-delay:${i*0.06}s" onclick="openProject(${p.id})">
-        <button class="btn btn-icon project-card-del" onclick="event.stopPropagation();deleteProject(${p.id})" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-        <div class="project-card-accent" style="background:${p.color}"></div>
-        <div class="project-card-name">${p.name}</div>
-        <div class="project-card-desc">${p.description||'No description.'}</div>
-        <div class="project-card-meta">
-          <span>${p.task_count||0} task${(p.task_count||0)!==1?'s':''}</span>
-          <span style="color:var(--border)">·</span>
-          <span>${p.member_count||0} member${(p.member_count||0)!==1?'s':''}</span>
-        </div>
-      </div>`).join('');
-    // Sidebar project list
-    document.getElementById('sidebarProjects').innerHTML=allProjects.slice(0,6).map(p=>`
-      <button class="nav-item" onclick="openProject(${p.id})" id="navProj${p.id}">
-        <span style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0"></span>
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
-      </button>`).join('');
-  }catch(e){toast(e.message,'red');}
-}
-
-// ── BOARD ─────────────────────────────────────────────────────────────────────
-async function openProject(id){
-  currentProject=allProjects.find(p=>p.id===id)||{id};
-  setActiveNav('navProj'+id);
-  await refreshBoard();
-}
-
-async function refreshBoard(){
-  try{
-    const [pd,td]=await Promise.all([
-      api('GET',`/api/projects/${currentProject.id}`),
-      api('GET',`/api/projects/${currentProject.id}/tasks`)
-    ]);
-    currentProject={...currentProject,...pd.project};
-    allMembers=pd.members;
-    allTasks=td.tasks;
-    renderBoard();
-  }catch(e){toast(e.message,'red');}
-}
-
-function renderBoard(){
-  const main=document.getElementById('mainArea');
-  const membersHtml=allMembers.slice(0,5).map(m=>`<div class="avatar avatar-sm" title="${m.name}" style="border:2px solid var(--bg-1)">${m.name.charAt(0).toUpperCase()}</div>`).join('');
-  const COLS=[
-    {key:'todo',label:'To Do',color:'#666'},
-    {key:'inprogress',label:'In Progress',color:'#5b6af0'},
-    {key:'review',label:'In Review',color:'#eab308'},
-    {key:'done',label:'Done',color:'#22c55e'}
-  ];
-  main.innerHTML=`
-    <div class="topbar">
-      <button class="btn btn-ghost btn-sm" onclick="showDash()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Back
-      </button>
-      <span class="topbar-dot" style="background:${currentProject.color}"></span>
-      <span class="topbar-title">${currentProject.name}</span>
-      <div class="members-stack" id="topbarMembers">${membersHtml}</div>
-      <button class="btn btn-ghost btn-sm" onclick="openMembersModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Members
-      </button>
-      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add task
-      </button>
-    </div>
-    <div class="board-columns-wrap">
-      ${COLS.map(col=>{
-        const tasks=allTasks.filter(t=>t.status===col.key);
-        return `<div class="kanban-col">
-          <div class="col-header">
-            <span class="col-dot" style="background:${col.color}"></span>
-            <span class="col-name">${col.label}</span>
-            <span class="col-count">${tasks.length}</span>
-            <button class="col-add-btn" onclick="openNewTaskModal('${col.key}')" title="Add task">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </div>
-          <div class="col-body">
-            ${tasks.length ? tasks.map(t=>renderTaskCard(t)).join('') : `<div class="col-empty">No tasks</div>`}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-}
-
-function renderTaskCard(t){
-  const overdue=t.due_date&&new Date(t.due_date)<new Date()&&t.status!=='done';
-  const assigneeInitial=t.assignee_name?t.assignee_name.charAt(0).toUpperCase():'';
-  return `<div class="task-card" onclick="openTaskDetail(${t.id})">
-    <span class="task-card-priority priority-${t.priority}">${t.priority}</span>
-    <div class="task-card-title">${t.title}</div>
-    <div class="task-card-footer">
-      <div class="task-card-assignee">
-        ${assigneeInitial?`<div class="avatar" style="width:20px;height:20px;font-size:9px">${assigneeInitial}</div>${t.assignee_name}`:'<span style="color:var(--text-3);font-size:11px">Unassigned</span>'}
-      </div>
-      ${t.due_date?`<div class="task-card-due${overdue?' overdue':''}"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${t.due_date}</div>`:''}
-    </div>
-  </div>`;
-}
-
-// ── TASK FORM ─────────────────────────────────────────────────────────────────
-function openNewTaskModal(defaultStatus='todo'){
-  editingTaskId=null;
-  document.getElementById('tfTitle').textContent='New task';
-  document.getElementById('tfName').value='';
-  document.getElementById('tfDesc').value='';
-  document.getElementById('tfStatus').value=defaultStatus;
-  document.getElementById('tfPriority').value='medium';
-  document.getElementById('tfDue').value='';
-  document.getElementById('tfMsg').innerHTML='';
-  document.getElementById('tfBtn').textContent='Create task';
-  populateAssignees('tfAssignee',null);
-  openOverlay('taskFormOverlay');
-}
-
-function openEditTask(){
-  if(!currentTask) return;
-  editingTaskId=currentTask.id;
-  document.getElementById('tfTitle').textContent='Edit task';
-  document.getElementById('tfName').value=currentTask.title;
-  document.getElementById('tfDesc').value=currentTask.description||'';
-  document.getElementById('tfStatus').value=currentTask.status;
-  document.getElementById('tfPriority').value=currentTask.priority;
-  document.getElementById('tfDue').value=currentTask.due_date||'';
-  document.getElementById('tfMsg').innerHTML='';
-  document.getElementById('tfBtn').textContent='Save changes';
-  populateAssignees('tfAssignee',currentTask.assignee_id);
-  openOverlay('taskFormOverlay');
-}
-
-function populateAssignees(selId,selectedId){
-  const sel=document.getElementById(selId);
-  sel.innerHTML='<option value="">Unassigned</option>'+
-    allMembers.map(m=>`<option value="${m.id}"${m.id==selectedId?' selected':''}>${m.name}</option>`).join('');
-}
-
-async function submitTask(){
-  const title=document.getElementById('tfName').value.trim();
-  const msg=document.getElementById('tfMsg');
-  if(!title){msg.innerHTML='<div class="msg error">Task title is required.</div>';return;}
-  const body={
-    title,
-    description:document.getElementById('tfDesc').value.trim(),
-    status:document.getElementById('tfStatus').value,
-    priority:document.getElementById('tfPriority').value,
-    assignee_id:document.getElementById('tfAssignee').value||null,
-    due_date:document.getElementById('tfDue').value||null
-  };
-  try{
-    if(editingTaskId) await api('PUT',`/api/projects/${currentProject.id}/tasks/${editingTaskId}`,body);
-    else await api('POST',`/api/projects/${currentProject.id}/tasks`,body);
-    closeOverlay('taskFormOverlay');
-    toast(editingTaskId?'Task updated':'Task created','green');
-    await refreshBoard();
-  }catch(e){msg.innerHTML=`<div class="msg error">${e.message}</div>`;}
-}
-
-// ── TASK DETAIL ───────────────────────────────────────────────────────────────
-async function openTaskDetail(id){
-  currentTask=allTasks.find(t=>t.id===id);
-  if(!currentTask) return;
-  document.getElementById('tdTitle').textContent=currentTask.title;
-  document.getElementById('tdDesc').textContent=currentTask.description||'No description provided.';
-  document.getElementById('tdStatus').innerHTML=`<span class="badge badge-${currentTask.status}">${STATUS_LABELS[currentTask.status]}</span>`;
-  document.getElementById('tdPriority').innerHTML=`<span class="task-card-priority priority-${currentTask.priority}" style="display:inline-flex">${currentTask.priority}</span>`;
-  document.getElementById('tdAssignee').textContent=currentTask.assignee_name||'Unassigned';
-  document.getElementById('tdDue').textContent=currentTask.due_date||'—';
-  document.getElementById('tdCreator').textContent=currentTask.creator_name||'—';
-  document.getElementById('tdCreated').textContent=new Date(currentTask.created_at).toLocaleDateString('en-ZA',{year:'numeric',month:'short',day:'numeric'});
-  if(commentTextarea()) commentTextarea().value='';
-  openOverlay('taskDetailOverlay');
-  await loadComments(id);
-}
-
-async function loadComments(taskId){
-  const list=document.getElementById('commentList');
-  list.innerHTML=`<div class="loader"><div class="spinner"></div></div>`;
-  try{
-    const data=await api('GET',`/api/tasks/${taskId}/comments`);
-    if(!data.comments.length){list.innerHTML=`<div style="font-size:12px;color:var(--text-3);padding:8px 0">No comments yet.</div>`;return;}
-    list.innerHTML=data.comments.map(c=>`
-      <div class="comment-item">
-        <div class="avatar avatar-sm">${c.user_name.charAt(0).toUpperCase()}</div>
-        <div class="comment-bubble">
-          <div class="comment-author-row">
-            <span class="comment-author">${c.user_name}</span>
-            <span class="comment-time">${timeAgo(c.created_at)}</span>
-          </div>
-          <div class="comment-text">${c.content}</div>
-        </div>
-      </div>`).join('');
-    list.scrollTop=list.scrollHeight;
-  }catch{}
-}
-
-async function submitComment(){
-  const ta=commentTextarea();
-  if(!ta||!ta.value.trim()||!currentTask) return;
-  try{
-    await api('POST',`/api/tasks/${currentTask.id}/comments`,{content:ta.value.trim()});
-    ta.value='';
-    await loadComments(currentTask.id);
-    toast('Comment posted','green');
-  }catch(e){toast(e.message,'red');}
-}
-
-async function deleteCurrentTask(){
-  if(!currentTask||!confirm('Delete this task?')) return;
-  try{
-    await api('DELETE',`/api/projects/${currentProject.id}/tasks/${currentTask.id}`);
-    closeOverlay('taskDetailOverlay');
-    toast('Task deleted','green');
-    await refreshBoard();
-  }catch(e){toast(e.message,'red');}
-}
-
-// ── NEW PROJECT ───────────────────────────────────────────────────────────────
-function openNewProject(){
-  document.getElementById('npName').value='';
-  document.getElementById('npDesc').value='';
-  document.getElementById('npMsg').innerHTML='';
-  const row=document.getElementById('colorRow');
-  row.innerHTML=COLORS.map((c,i)=>`<div class="color-swatch${i===0?' selected':''}" style="background:${c}" data-color="${c}" onclick="selectColor(this)"></div>`).join('');
-  openOverlay('newProjectOverlay');
-}
-function selectColor(el){
-  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
-  el.classList.add('selected');
-}
-async function createProject(){
-  const name=document.getElementById('npName').value.trim();
-  const desc=document.getElementById('npDesc').value.trim();
-  const color=document.querySelector('.color-swatch.selected')?.dataset.color||'#5b6af0';
-  const msg=document.getElementById('npMsg');
-  if(!name){msg.innerHTML='<div class="msg error">Project name required.</div>';return;}
-  try{
-    await api('POST','/api/projects',{name,description:desc,color});
-    closeOverlay('newProjectOverlay');
-    toast('Project created','green');
-    await loadProjects();
-  }catch(e){msg.innerHTML=`<div class="msg error">${e.message}</div>`;}
-}
-async function deleteProject(id){
-  if(!confirm('Delete this project and all its tasks?')) return;
-  try{await api('DELETE',`/api/projects/${id}`);toast('Project deleted','green');await loadProjects();}
-  catch(e){toast(e.message,'red');}
-}
-
-// ── MEMBERS ───────────────────────────────────────────────────────────────────
-function openMembersModal(){
-  renderMemberList();
-  document.getElementById('memberSearch').value='';
-  document.getElementById('searchResults').style.display='none';
-  openOverlay('membersOverlay');
-}
-function renderMemberList(){
-  document.getElementById('memberList').innerHTML=allMembers.map(m=>`
-    <div class="member-item">
-      <div class="avatar avatar-sm">${m.name.charAt(0).toUpperCase()}</div>
-      <div class="member-info"><div class="member-name">${m.name}</div><div class="member-role">${m.role}</div></div>
-      ${m.role!=='owner'?`<button class="btn btn-ghost btn-sm" onclick="removeMember(${m.id})">Remove</button>`:'<span style="font-size:11px;color:var(--text-3)">Owner</span>'}
-    </div>`).join('');
-}
-async function removeMember(userId){
-  if(!confirm('Remove this member?')) return;
-  try{await api('DELETE',`/api/projects/${currentProject.id}/members/${userId}`);toast('Member removed','green');await refreshBoard();renderMemberList();}
-  catch(e){toast(e.message,'red');}
-}
-function searchUsers(){
-  clearTimeout(searchTimeout);
-  const q=document.getElementById('memberSearch').value.trim();
-  const results=document.getElementById('searchResults');
-  if(q.length<2){results.style.display='none';return;}
-  searchTimeout=setTimeout(async()=>{
-    try{
-      const data=await api('GET',`/api/users/search?q=${encodeURIComponent(q)}`);
-      if(!data.users.length){results.innerHTML='<div class="search-result-item" style="color:var(--text-3)">No users found</div>';results.style.display='block';return;}
-      results.innerHTML=data.users.map(u=>`
-        <div class="search-result-item" onclick="addMember(${u.id},'${u.name}')">
-          <div class="avatar avatar-sm">${u.name.charAt(0).toUpperCase()}</div>
-          <div><div style="font-size:13px;font-weight:600">${u.name}</div><div style="font-size:11px;color:var(--text-3)">${u.email}</div></div>
-        </div>`).join('');
-      results.style.display='block';
-    }catch{}
-  },350);
-}
-async function addMember(userId,name){
-  try{
-    await api('POST',`/api/projects/${currentProject.id}/members`,{user_id:userId});
-    toast(`${name} added`,'green');
-    document.getElementById('memberSearch').value='';
-    document.getElementById('searchResults').style.display='none';
-    await refreshBoard();renderMemberList();
-  }catch(e){toast(e.message,'red');}
-}
-
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
-async function loadNotifications(){
-  try{
-    const data=await api('GET','/api/notifications');
-    const unread=data.notifications.filter(n=>!n.is_read).length;
-    const badge=document.getElementById('notifBadge');
-    badge.textContent=unread||'';
-    badge.style.display=unread?'flex':'none';
-    const list=document.getElementById('notifList');
-    if(!data.notifications.length){list.innerHTML='<div style="padding:24px;text-align:center;font-size:13px;color:var(--text-3)">No notifications</div>';return;}
-    list.innerHTML=data.notifications.map(n=>`
-      <div class="notif-item${n.is_read?'':' unread'}">
-        ${!n.is_read?'<div class="notif-dot"></div>':'<div style="width:6px"></div>'}
-        <div><div class="notif-text">${n.message}</div><div class="notif-time">${timeAgo(n.created_at)}</div></div>
-      </div>`).join('');
-  }catch{}
-}
-function toggleNotifPanel(){document.getElementById('notifPanel').classList.toggle('open');}
-async function markRead(){
-  await api('PUT','/api/notifications/read');
-  loadNotifications();
-  document.getElementById('notifPanel').classList.remove('open');
-}
-
-// ── OVERLAY ───────────────────────────────────────────────────────────────────
-function openOverlay(id){document.getElementById(id).classList.add('open');}
-function closeOverlay(id){document.getElementById(id).classList.remove('open');}
-function closeBd(e,id){if(e.target.id===id)closeOverlay(id);}
-
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function timeAgo(dt){
-  const d=(Date.now()-new Date(dt))/1000;
-  if(d<60) return 'just now';
-  if(d<3600) return Math.floor(d/60)+'m ago';
-  if(d<86400) return Math.floor(d/3600)+'h ago';
-  return Math.floor(d/86400)+'d ago';
-}
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    ['newProjectOverlay','taskFormOverlay','taskDetailOverlay','membersOverlay'].forEach(closeOverlay);
+// Initialize App
+document.addEventListener('DOMContentLoaded', () => {
+  setupColors();
+  checkAuth();
+  
+  // Close notification panel if clicked outside
+  document.addEventListener('click', () => {
     document.getElementById('notifPanel').classList.remove('open');
-  }
-  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
-    const ta=commentTextarea();
-    if(ta&&document.activeElement===ta) submitComment();
-  }
+  });
 });
 
-document.addEventListener('click',e=>{
-  const panel=document.getElementById('notifPanel');
-  if(panel.classList.contains('open')&&!panel.contains(e.target)&&!e.target.closest('.nav-item[onclick*="notif"]'))
-    panel.classList.remove('open');
-});
+function showToast(text, type = '') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type} show`;
+  t.innerText = text;
+  wrap.appendChild(t);
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-async function init(){
-  try{
-    const data=await api('GET','/api/auth/me');
-    currentUser=data.user;
-    enterApp();
-  }catch{
+function setupColors() {
+  const row = document.getElementById('npColors');
+  row.innerHTML = '';
+  colors.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c === selectedColor ? ' selected' : '');
+    sw.style.backgroundColor = c;
+    sw.onclick = () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      selectedColor = c;
+    };
+    row.appendChild(sw);
+  });
+}
+
+function toggleAuth() {
+  const isLogin = document.getElementById('authTitle').innerText === 'Welcome back';
+  document.getElementById('authTitle').innerText = isLogin ? 'Create workspace account' : 'Welcome back';
+  document.getElementById('authSub').innerText = isLogin ? 'Get started for free' : 'Sign in to your workspace';
+  document.getElementById('aNameG').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('aBtn').innerText = isLogin ? 'Create Account' : 'Sign in';
+  document.getElementById('aToggle').innerText = isLogin ? 'Already have an account? Sign in' : "Don't have an account? Create one";
+}
+
+async function handleAuth() {
+  const email = document.getElementById('aEmail').value;
+  const password = document.getElementById('aPass').value;
+  const name = document.getElementById('aName').value;
+  const isLogin = document.getElementById('authTitle').innerText === 'Welcome back';
+  
+  const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+  const body = isLogin ? { email, password } : { email, password, name };
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Authentication failed');
+    
+    checkAuth();
+  } catch (err) {
+    const msg = document.getElementById('authMsg');
+    msg.className = 'msg error';
+    msg.innerText = err.message;
+  }
+}
+
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) throw new Error();
+    currentUser = await res.json();
+    
+    document.getElementById('authView').classList.remove('active');
+    document.getElementById('appView').classList.add('active');
+    
+    document.getElementById('sidebarName').innerText = currentUser.name;
+    document.getElementById('sidebarRole').innerText = currentUser.email;
+    document.getElementById('sidebarAv').innerText = currentUser.avatar || '👤';
+    
+    initWS();
+    loadProjects();
+    showDash();
+    loadNotifications();
+  } catch {
+    document.getElementById('appView').classList.remove('active');
     document.getElementById('authView').classList.add('active');
   }
 }
-init();
+
+async function logoutUser() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  if (ws) ws.close();
+  currentUser = null;
+  checkAuth();
+}
+
+function initWS() {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${window.location.host}`);
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    
+    // Handle live real-time task triggers
+    if (msg.type === 'task_updated' || msg.type === 'task_created' || msg.type === 'task_deleted') {
+      if (currentProject && currentProject.id === msg.projectId) {
+        loadTasks(currentProject.id);
+      }
+      if (!currentProject) showDash();
+    }
+    
+    // Handle live comments setup
+    if (msg.type === 'new_comment') {
+      const openModal = document.getElementById('taskOverlay').classList.contains('open');
+      if (openModal && window.currentOpenTaskId === msg.taskId) {
+        loadComments(msg.taskId);
+      }
+      showToast(msg.comment);
+    }
+    
+    // Refresh incoming notification metrics
+    loadNotifications();
+  };
+}
+
+async function loadProjects() {
+  const res = await fetch('/api/projects');
+  projects = await res.json();
+  const container = document.getElementById('sidebarProjects');
+  container.innerHTML = '';
+  
+  projects.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item';
+    btn.id = `nav-p-${p.id}`;
+    btn.innerHTML = `
+      <div style="width:8px; height:8px; border-radius:50%; background-color:${p.color || '#fff'}"></div>
+      <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</span>
+    `;
+    btn.onclick = () => openProject(p);
+    container.appendChild(btn);
+  });
+}
+
+function showDash() {
+  currentProject = null;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('navDash').classList.add('active');
+  
+  const main = document.getElementById('mainArea');
+  main.innerHTML = `
+    <div class="topbar">
+      <div class="topbar-title">Overview Workspace</div>
+    </div>
+    <div class="dash-content">
+      <div class="dash-hero">
+        <div class="dash-hero-label">Workspace Summary</div>
+        <h1>Hello, ${currentUser.name}</h1>
+        <p>Keep track of task allocations, review progress items, and team operations.</p>
+        <button class="btn btn-primary" onclick="openOverlay('newProjectOverlay')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create New Project
+        </button>
+      </div>
+      <div class="section-title">Active Projects</div>
+      <div class="project-cards-grid" id="dashProjectsGrid"></div>
+    </div>
+  `;
+  renderDashProjects();
+}
+
+function renderDashProjects() {
+  const grid = document.getElementById('dashProjectsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  
+  if (projects.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><p>No projects found. Create your first project to get started.</p></div>';
+    return;
+  }
+  
+  projects.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.innerHTML = `
+      <div class="project-card-accent" style="background-color:${p.color}"></div>
+      <div class="project-card-name">${p.name}</div>
+      <div class="project-card-desc">${p.description || 'No description added.'}</div>
+      <div class="project-card-meta">
+        <span>Owner ID: ${p.owner_id}</span>
+      </div>
+    `;
+    card.onclick = () => openProject(p);
+    grid.appendChild(card);
+  });
+}
+
+function openOverlay(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeBd(e, id) {
+  if (e.target.id === id) closeOverlay(id);
+}
+
+async function submitProject() {
+  const name = document.getElementById('npName').value;
+  const description = document.getElementById('npDesc').value;
+  if (!name) return showToast('Project name required', 'red');
+
+  const res = await fetch('/api/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, description, color: selectedColor })
+  });
+  
+  if (res.ok) {
+    document.getElementById('npName').value = '';
+    document.getElementById('npDesc').value = '';
+    closeOverlay('newProjectOverlay');
+    showToast('Project created successfully', 'green');
+    await loadProjects();
+    showDash();
+  }
+}
+
+function openProject(project) {
+  currentProject = project;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navBtn = document.getElementById(`nav-p-${project.id}`);
+  if (navBtn) navBtn.classList.add('active');
+
+  const main = document.getElementById('mainArea');
+  main.innerHTML = `
+    <div class="topbar">
+      <div class="topbar-dot" style="background-color:${project.color}"></div>
+      <div class="topbar-title">${project.name}</div>
+      <button class="btn btn-secondary btn-sm" onclick="openAddTask()">+ Add Task</button>
+    </div>
+    <div class="board-layout">
+      <div class="board-columns-wrap">
+        <div class="kanban-col" id="col-todo">
+          <div class="col-header"><div class="col-dot" style="background:#666"></div><div class="col-name">To Do</div><div class="col-count" id="count-todo">0</div></div>
+          <div class="col-body" id="body-todo"></div>
+        </div>
+        <div class="kanban-col" id="col-inprogress">
+          <div class="col-header"><div class="col-dot" style="background:var(--accent)"></div><div class="col-name">In Progress</div><div class="col-count" id="count-inprogress">0</div></div>
+          <div class="col-body" id="body-inprogress"></div>
+        </div>
+        <div class="kanban-col" id="col-review">
+          <div class="col-header"><div class="col-dot" style="background:var(--yellow)"></div><div class="col-name">In Review</div><div class="col-count" id="count-review">0</div></div>
+          <div class="col-body" id="body-review"></div>
+        </div>
+        <div class="kanban-col" id="col-done">
+          <div class="col-header"><div class="col-dot" style="background:var(--green)"></div><div class="col-name">Done</div><div class="col-count" id="count-done">0</div></div>
+          <div class="col-body" id="body-done"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  loadTasks(project.id);
+}
+
+async function loadTasks(projectId) {
+  const res = await fetch(`/api/projects/${projectId}/tasks`);
+  tasks = await res.json();
+  renderTasks();
+}
+
+function renderTasks() {
+  const columns = { 'todo': [], 'inprogress': [], 'review': [], 'done': [] };
+  tasks.forEach(t => { if (columns[t.status]) columns[t.status].push(t); });
+
+  Object.keys(columns).forEach(status => {
+    const body = document.getElementById(`body-${status}`);
+    const count = document.getElementById(`count-${status}`);
+    if (!body || !count) return;
+    
+    body.innerHTML = '';
+    count.innerText = columns[status].length;
+
+    if (columns[status].length === 0) {
+      body.innerHTML = '<div class="col-empty">Drop or add tasks here</div>';
+      return;
+    }
+
+    columns[status].forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      card.id = `task-card-${t.id}`;
+      card.innerHTML = `
+        <div class="task-card-priority priority-${t.priority}">${t.priority}</div>
+        <div class="task-card-title">${t.title}</div>
+        <div class="task-card-footer">
+          <div class="task-card-assignee">👤 ID: ${t.assignee_id || 'Unassigned'}</div>
+          <div class="task-card-due">${t.due_date || 'No Date'}</div>
+        </div>
+      `;
+      card.onclick = () => openTaskDetails(t);
+      body.appendChild(card);
+    });
+  });
+}
+
+function openAddTask() {
+  if (!currentProject) return;
+  const title = prompt('Enter Task Title:');
+  if (!title) return;
+  const desc = prompt('Enter Description:');
+  const priority = prompt('Priority (low, medium, high):', 'medium') || 'medium';
+  
+  fetch(`/api/projects/${currentProject.id}/tasks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, description: desc, priority, status: 'todo' })
+  }).then(res => {
+    if (res.ok) {
+      showToast('Task added', 'green');
+      loadTasks(currentProject.id);
+    }
+  });
+}
+
+function openTaskDetails(task) {
+  window.currentOpenTaskId = task.id;
+  document.getElementById('mTaskTitle').innerText = task.title;
+  document.getElementById('mTaskDesc').innerText = task.description || 'No description available.';
+  document.getElementById('mTaskDue').innerText = task.due_date || 'No due date set';
+  document.getElementById('mTaskPriority').innerText = task.priority.toUpperCase();
+  
+  const statusBadge = document.getElementById('mTaskStatus');
+  statusBadge.className = `badge badge-${task.status}`;
+  statusBadge.innerText = task.status.toUpperCase();
+  
+  document.getElementById('mTaskAssignee').innerText = task.assignee_id ? `User ID: ${task.assignee_id}` : 'Unassigned';
+
+  // Dynamic state update setup
+  statusBadge.style.cursor = 'pointer';
+  statusBadge.onclick = () => {
+    const states = ['todo', 'inprogress', 'review', 'done'];
+    const nextIndex = (states.indexOf(task.status) + 1) % states.length;
+    const nextStatus = states[nextIndex];
+    
+    fetch(`/api/projects/${task.project_id}/tasks/${task.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...task, status: nextStatus })
+    }).then(() => {
+      task.status = nextStatus;
+      statusBadge.className = `badge badge-${nextStatus}`;
+      statusBadge.innerText = nextStatus.toUpperCase();
+      loadTasks(task.project_id);
+    });
+  };
+
+  loadComments(task.id);
+  
+  document.getElementById('mCommentBtn').onclick = () => submitComment(task.id);
+  openOverlay('taskOverlay');
+}
+
+async function loadComments(taskId) {
+  const res = await fetch(`/api/tasks/${taskId}/comments`);
+  const comments = await res.json();
+  const container = document.getElementById('mCommentList');
+  container.innerHTML = '';
+  
+  if (comments.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-3); font-size:12px;">No discussion activity yet.</p>';
+    return;
+  }
+  
+  comments.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'comment-item';
+    item.innerHTML = `
+      <div class="avatar avatar-sm">U</div>
+      <div class="comment-bubble">
+        <div class="comment-author-row">
+          <span class="comment-author">User ${c.user_id}</span>
+        </div>
+        <div class="comment-text">${c.text}</div>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+async function submitComment(taskId) {
+  const ta = document.getElementById('mNewComment');
+  const text = ta.value.trim();
+  if (!text) return;
+  
+  const res = await fetch(`/api/tasks/${taskId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+  
+  if (res.ok) {
+    ta.value = '';
+    loadComments(taskId);
+  }
+}
+
+// ── FIX: NOTIFICATION HANDLERS ──
+function toggleNotifPanel(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('open');
+}
+
+async function loadNotifications() {
+  try {
+    const res = await fetch('/api/notifications');
+    const { notifications } = await res.json();
+    
+    const list = document.getElementById('notifList');
+    const badge = document.getElementById('notifBadge');
+    list.innerHTML = '';
+    
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+    if (unreadCount > 0) {
+      badge.innerText = unreadCount;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+    
+    if (!notifications || notifications.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;color:var(--text-3)">No notifications</div>';
+      return;
+    }
+    
+    notifications.forEach(n => {
+      const item = document.createElement('div');
+      item.className = `notif-item ${!n.is_read ? 'unread' : ''}`;
+      item.innerHTML = `
+        ${!n.is_read ? '<div class="notif-dot"></div>' : ''}
+        <div class="notif-text">
+          <div>${n.text}</div>
+          <div class="notif-time">${n.created_at || ''}</div>
+        </div>
+      `;
+      
+      // FIX ACTION TRIGGER: Clicking notification automatically pulls up target board and task modal
+      item.onclick = async (e) => {
+        e.stopPropagation();
+        document.getElementById('notifPanel').classList.remove('open');
+        
+        if (n.task_id) {
+          try {
+            // Find the project container workspace matching the chosen context
+            let targetProj = projects.find(p => p.id === n.project_id);
+            if (!targetProj) {
+              const pRes = await fetch('/api/projects');
+              projects = await pRes.json();
+              targetProj = projects.find(p => p.id === n.project_id);
+            }
+            
+            if (targetProj) {
+              openProject(targetProj);
+              
+              // Direct lookup fetch for task operational context arrays
+              const tRes = await fetch(`/api/projects/${targetProj.id}/tasks`);
+              tasks = await tRes.json();
+              renderTasks();
+              
+              const targetTask = tasks.find(t => t.id === n.task_id);
+              if (targetTask) {
+                openTaskDetails(targetTask);
+              } else {
+                showToast('Task details could not be found.', 'red');
+              }
+            }
+          } catch (err) {
+            console.error('Error launching target workspace item:', err);
+          }
+        }
+      };
+      
+      list.appendChild(item);
+    });
+  } catch (err) {
+    console.error('Failed reading active notifications:', err);
+  }
+}
+
+async function markRead() {
+  const res = await fetch('/api/notifications/read', { method: 'PUT' });
+  if (res.ok) {
+    showToast('Notifications marked as read', 'green');
+    loadNotifications();
+  }
+}
 </script>
 </body>
 </html>
