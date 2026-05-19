@@ -177,19 +177,6 @@ body::before {
 .auth-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; }
 .auth-sub { font-size: 14px; color: var(--text-2); margin-bottom: 28px; }
 
-.auth-hint {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  font-size: 12px;
-  color: var(--text-2);
-  margin-bottom: 20px;
-  line-height: 1.7;
-  font-family: 'Geist Mono', monospace;
-}
-.auth-hint strong { color: var(--text); }
-
 .fg { margin-bottom: 14px; }
 .fg label {
   display: block;
@@ -966,10 +953,6 @@ body::before {
       </div>
       <div class="auth-title" id="authTitle">Welcome back</div>
       <div class="auth-sub" id="authSub">Sign in to your workspace</div>
-      <div class="auth-hint">
-        <strong>admin@projectflow.com</strong> / admin123<br>
-        <strong>staff@projectflow.com</strong> / staff123
-      </div>
       <div id="authMsg"></div>
       <div class="fg"><label>Email</label><input type="email" id="aEmail" placeholder="you@company.com"></div>
       <div class="fg" id="aNameG" style="display:none"><label>Full Name</label><input type="text" id="aName" placeholder="Your name"></div>
@@ -1452,7 +1435,6 @@ async function drop(e, targetStatus) {
   const task = tasks.find(t => t.id == taskId);
   if(!task || task.status === targetStatus) return;
 
-  // Sync back to route payload schema: PUT /api/projects/:id/tasks/:tid
   try {
     const res = await fetch(`/api/projects/${currentProject.id}/tasks/${taskId}`, {
       method: 'PUT',
