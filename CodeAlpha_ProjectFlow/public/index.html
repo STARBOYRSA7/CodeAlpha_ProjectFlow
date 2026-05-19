@@ -407,14 +407,6 @@ body::before {
   position: relative;
   overflow: hidden;
 }
-.dash-hero::before {
-  content: '';
-  position: absolute;
-  top: -80px; right: -80px;
-  width: 280px; height: 280px;
-  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-  pointer-events: none;
-}
 .dash-hero-label {
   font-size: 11px;
   font-weight: 600;
@@ -1192,7 +1184,7 @@ async function handleAuth() {
   const msg = document.getElementById('authMsg');
   
   if(!email || !password || (isSignUp && !name)) {
-    msg.innerHTML = `<div class="msg error">Please fill in all layout blocks.</div>`;
+    msg.innerHTML = `<div class="msg error">Please fill in all required fields.</div>`;
     return;
   }
   
