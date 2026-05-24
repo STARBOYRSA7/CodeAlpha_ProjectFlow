@@ -14,13 +14,17 @@ const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'projectflow_secret_change_in_prod';
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'projectflow.db');
+
+// Railway ephemeral storage fix: Write to /tmp if no persistent volume disk is bound
+const DB_PATH = process.env.DB_PATH || path.join('/tmp', 'projectflow.db');
 
 // ── Database ─────────────────────────────────────────────────────────────────
 let db;
 
 async function initDB() {
   const SQL = await initSqlJs();
+  
+  console.log(`Targeting database path: ${DB_PATH}`);
   db = fs.existsSync(DB_PATH)
     ? new SQL.Database(fs.readFileSync(DB_PATH))
     : new SQL.Database();
@@ -93,11 +97,16 @@ async function initDB() {
   )`);
 
   saveDB();
-  console.log('Database ready.');
+  console.log('Database initialization verification complete.');
 }
 
 function saveDB() {
-  fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+  try {
+    const data = db.export();
+    fs.writeFileSync(DB_PATH, Buffer.from(data));
+  } catch (err) {
+    console.error('Failed to commit database state changes to storage cluster:', err);
+  }
 }
 
 function dbGet(sql, params = []) {
@@ -123,9 +132,9 @@ function dbRun(sql, params = []) {
 }
 
 // ── WebSocket ─────────────────────────────────────────────────────────────────
-const clients = new Map(); // userId -> Set of ws connections
+const clients = new Map();
 
-wss.on('connection', (ws, req) => {
+wss.on('connection', (ws) => {
   let userId = null;
 
   ws.on('message', (raw) => {
@@ -171,6 +180,9 @@ function createNotification(userId, type, message, linkId = null) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Serve static assets from project root context safely if no public directory wrapper exists
+app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public')));
 
 function requireAuth(req, res, next) {
@@ -188,32 +200,52 @@ function requireProjectMember(req, res, next) {
   next();
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth API Routes ───────────────────────────────────────────────────────────
 app.post('/api/auth/register', (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ error: 'All fields required.' });
-  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
-  if (dbGet('SELECT id FROM users WHERE email=?', [email])) return res.status(409).json({ error: 'Account already exists.' });
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ error: 'All fields required.' });
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    
+    if (dbGet('SELECT id FROM users WHERE email=?', [email])) {
+      return res.status(409).json({ error: 'Account already exists.' });
+    }
 
-  const hashed = bcrypt.hashSync(password, 10);
-  const avatars = ['🧑','👩','👨','🧔','👩‍💻','👨‍💻','🧑‍💼','👩‍🎨'];
-  const avatar = avatars[Math.floor(Math.random() * avatars.length)];
-  const result = dbRun('INSERT INTO users (name,email,password,avatar) VALUES (?,?,?,?)', [name, email, hashed, avatar]);
-  const user = { id: result.lastInsertRowid, name, email, avatar };
-  const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
-  res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000, sameSite: 'lax' });
-  res.json({ user, token });
+    const hashed = bcrypt.hashSync(password, 10);
+    const avatars = ['🧑','👩','👨','🧔','👩‍💻','👨‍💻','🧑‍💼','👩‍🎨'];
+    const avatar = avatars[Math.floor(Math.random() * avatars.length)];
+    const result = dbRun('INSERT INTO users (name,email,password,avatar) VALUES (?,?,?,?)', [name, email, hashed, avatar]);
+    
+    const user = { id: result.lastInsertRowid, name, email, avatar };
+    const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
+    
+    res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000, sameSite: 'lax' });
+    return res.json({ user, token });
+  } catch (err) {
+    console.error('CRITICAL SIGNUP LOG ERROR:', err.message);
+    return res.status(500).json({ error: 'Internal system deployment error during profile provisioning.' });
+  }
 });
 
 app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
-  const user = dbGet('SELECT * FROM users WHERE email=?', [email]);
-  if (!user || !bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Invalid email or password.' });
-  const payload = { id: user.id, name: user.name, email: user.email, avatar: user.avatar };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-  res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000, sameSite: 'lax' });
-  res.json({ user: payload, token });
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
+    
+    const user = dbGet('SELECT * FROM users WHERE email=?', [email]);
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+    
+    const payload = { id: user.id, name: user.name, email: user.email, avatar: user.avatar };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    
+    res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000, sameSite: 'lax' });
+    return res.json({ user: payload, token });
+  } catch (err) {
+    console.error('CRITICAL LOGIN LOG ERROR:', err.message);
+    return res.status(500).json({ error: 'Internal system validation processing failure.' });
+  }
 });
 
 app.post('/api/auth/logout', (req, res) => { res.clearCookie('token'); res.json({ message: 'Logged out' }); });
@@ -319,13 +351,11 @@ app.post('/api/projects/:projectId/tasks', requireAuth, requireProjectMember, (r
 
   const task = dbGet('SELECT * FROM tasks WHERE id=?', [result.lastInsertRowid]);
 
-  // Notify assignee
   if (assignee_id && assignee_id !== req.user.id) {
     const project = dbGet('SELECT name FROM projects WHERE id=?', [req.params.projectId]);
     createNotification(assignee_id, 'task_assigned', `You were assigned "${title}" in ${project.name}`, result.lastInsertRowid);
   }
 
-  // Broadcast to all project members
   const members = dbAll('SELECT user_id FROM project_members WHERE project_id=?', [req.params.projectId]);
   members.forEach(m => pushToUser(m.user_id, { type: 'task_created', task }));
 
@@ -344,13 +374,11 @@ app.put('/api/projects/:projectId/tasks/:taskId', requireAuth, requireProjectMem
 
   const updated = dbGet(`SELECT t.*,u.name as assignee_name,u.avatar as assignee_avatar FROM tasks t LEFT JOIN users u ON u.id=t.assignee_id WHERE t.id=?`, [req.params.taskId]);
 
-  // Notify new assignee
   if (assignee_id && assignee_id !== task.assignee_id && assignee_id !== req.user.id) {
     const project = dbGet('SELECT name FROM projects WHERE id=?', [req.params.projectId]);
     createNotification(assignee_id, 'task_assigned', `You were assigned "${updated.title}" in ${project.name}`, req.params.taskId);
   }
 
-  // Broadcast status change
   const members = dbAll('SELECT user_id FROM project_members WHERE project_id=?', [req.params.projectId]);
   members.forEach(m => pushToUser(m.user_id, { type: 'task_updated', task: updated }));
 
@@ -384,13 +412,11 @@ app.post('/api/tasks/:taskId/comments', requireAuth, (req, res) => {
     [req.params.taskId, req.user.id, content.trim()]);
   const comment = dbGet('SELECT c.*,u.name as user_name,u.avatar as user_avatar FROM comments c JOIN users u ON u.id=c.user_id WHERE c.id=?', [result.lastInsertRowid]);
 
-  // Notify task assignee and creator (if not the commenter)
   const notifyIds = new Set([task.assignee_id, task.created_by].filter(id => id && id !== req.user.id));
   notifyIds.forEach(uid => {
     createNotification(uid, 'comment', `${req.user.name} commented on "${task.title}"`, task.id);
   });
 
-  // Broadcast to project members
   const members = dbAll('SELECT user_id FROM project_members WHERE project_id=?', [task.project_id]);
   members.forEach(m => pushToUser(m.user_id, { type: 'new_comment', taskId: task.id, comment }));
 
@@ -411,9 +437,16 @@ app.put('/api/notifications/read', requireAuth, (req, res) => {
 // ── Catch-all ──────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+// Fix: Fallback check both paths if the build environment shifts layout locations
+app.get('*', (req, res) => {
+  const rootPath = path.join(__dirname, 'index.html');
+  if (fs.existsSync(rootPath)) {
+    return res.sendFile(rootPath);
+  }
+  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 initDB().then(() => {
-  server.listen(PORT, () => console.log(`ProjectFlow running on http://localhost:${PORT}`));
+  server.listen(PORT, () => console.log(`ProjectFlow active on configuration target port: ${PORT}`));
 }).catch(err => { console.error('DB init failed:', err); process.exit(1); });
