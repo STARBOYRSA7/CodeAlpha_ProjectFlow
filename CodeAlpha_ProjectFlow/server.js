@@ -359,8 +359,8 @@ app.put('/api/notifications/read', authenticateToken, (req, res) => {
 // ── SEED DATA ──
 (async () => {
   const rootPass = await bcrypt.hash('password123', 10);
-  users.push({ id: 1, name: 'Sizwe Sigubudu', email: 'sizuma@rosebankcollege.co.za', password: rootPass, avatar: 'SS' });
-  users.push({ id: 2, name: 'Alpha Tester', email: 'tester@codealpha.com', password: rootPass, avatar: 'AT' });
+  users.push({ id: 1, name: 'Demo User', email: 'demo@projectflow.app', password: rootPass, avatar: 'DU' });
+  users.push({ id: 2, name: 'Demo Collaborator', email: 'collab@projectflow.app', password: rootPass, avatar: 'DC' });
 
   projects.push({ id: 101, name: 'CodeAlpha FullStack Management', description: 'Restaurant management, URL shorteners, and event registers.', color: '#7c3aed' });
   projectMembers.push({ project_id: 101, user_id: 1, role: 'owner' });
