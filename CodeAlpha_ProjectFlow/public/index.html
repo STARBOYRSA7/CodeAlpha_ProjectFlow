@@ -6,6 +6,7 @@
 <title>ProjectFlow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
 /* ─────────────────────────────────────────────
    DESIGN LANGUAGE: Emil Kowalski × Linear
@@ -16,6 +17,13 @@
 ───────────────────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Lucide icon base */
+.icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.icon svg { width: 14px; height: 14px; stroke-width: 1.8; }
+.icon-sm svg { width: 12px; height: 12px; }
+.icon-md svg { width: 16px; height: 16px; }
+.icon-lg svg { width: 20px; height: 20px; }
 
 :root {
   --black: #080808;
@@ -891,6 +899,200 @@ input[type="color"] {
 #toast.err::before { background: var(--c-high); }
 #toast.inf { color: var(--white-60); }
 #toast.inf::before { background: var(--white-40); }
+/* ══════════════════════════════════════════
+   MOBILE RESPONSIVE — 768px and below
+   Sidebar → hidden drawer + bottom nav
+   Board → single col scroll
+   Modals → full screen sheet
+══════════════════════════════════════════ */
+
+/* ── MOBILE BOTTOM NAV ── */
+.mobile-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--black-2);
+  border-top: 1px solid var(--border-2);
+  z-index: 200;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+}
+.mnav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: transparent; border: none;
+  color: var(--white-20); cursor: pointer;
+  padding: 6px 14px; border-radius: 8px;
+  font-size: 9px; font-family: var(--mono); letter-spacing: 0.06em;
+  transition: all 0.18s var(--ease-out);
+  text-transform: uppercase;
+}
+.mnav-btn.active { color: var(--white); }
+.mnav-btn svg { width: 18px; height: 18px; }
+
+/* ── MOBILE SIDEBAR DRAWER ── */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 299;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease both;
+}
+.sidebar-overlay.open { display: block; }
+
+@media (max-width: 768px) {
+
+  /* prevent tap zoom on inputs */
+  input, select, textarea, button {
+    font-size: 16px !important;
+  }
+  .f-label, .ml, .field-label, .sidebar-section,
+  .col-lbl, .comments-hd, .notif-hd,
+  .prio-dot, .proj-cnt, .col-n, .cbubble-who,
+  .cbubble-when, .notif-time, .m-email, .user-e,
+  .user-n, .tcard-desc, .demo-box, .tcard-foot {
+    font-size: 12px !important;
+  }
+
+  /* Body layout */
+  body { flex-direction: column; overflow: hidden; }
+
+  /* ── SIDEBAR becomes slide-in drawer ── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 56px;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.3s var(--ease-out);
+    z-index: 300;
+    border-right: 1px solid var(--border-2);
+  }
+  .sidebar.drawer-open {
+    transform: translateX(0);
+    box-shadow: 20px 0 60px rgba(0,0,0,0.8);
+  }
+
+  /* ── MAIN fills full width ── */
+  .main {
+    width: 100%;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+  }
+
+  /* ── TOPBAR slim on mobile ── */
+  .topbar {
+    height: 48px;
+    padding: 0 14px;
+  }
+  .top-title { font-size: 13px; }
+  /* Hide members/task buttons from topbar — they move to bottom nav */
+  #btnMembers, #btnTask { display: none !important; }
+
+  /* ── BOARD ── */
+  .board-wrap {
+    padding: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    height: calc(100vh - 48px - 56px);
+  }
+  .board-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    min-width: unset;
+    width: max-content;
+    height: 100%;
+  }
+  .col {
+    width: 78vw;
+    max-width: 300px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+  .col-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── MODALS → full-screen bottom sheet ── */
+  .overlay {
+    align-items: flex-end;
+  }
+  .modal, .modal-wide {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 18px 32px;
+    animation: sheetUp 0.35s var(--ease-spring) both;
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  /* Sheet handle */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    background: var(--border-3);
+    border-radius: 2px;
+    margin: 0 auto 18px;
+  }
+
+  .grid-2 { grid-template-columns: 1fr; gap: 0; }
+
+  /* ── NOTIF panel full width ── */
+  .notif-panel {
+    position: fixed;
+    top: auto; bottom: 60px;
+    left: 8px; right: 8px;
+    width: auto;
+    border-radius: var(--r-lg);
+  }
+
+  /* ── AUTH card ── */
+  .auth-card {
+    width: 100%;
+    padding: 0 20px;
+  }
+  .auth-heading { font-size: 1.6rem; }
+
+  /* ── Welcome view ── */
+  .welcome-view { padding-bottom: 56px; }
+
+  /* ── MOBILE NAV shown ── */
+  .mobile-nav { display: flex; }
+
+  /* ── FAB for add task ── */
+  .fab {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .col { width: 88vw; }
+  .auth-heading { font-size: 1.4rem; }
+}
+
+/* FAB — floating action button for mobile task create */
+.fab {
+  display: none;
+  position: fixed;
+  bottom: 68px; right: 16px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--white);
+  border: none; color: var(--black);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  cursor: pointer; z-index: 150;
+  align-items: center; justify-content: center;
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
+}
+.fab:hover { transform: scale(1.08); box-shadow: 0 8px 28px rgba(0,0,0,0.6); }
+.fab:active { transform: scale(0.95); }
+.fab svg { width: 20px; height: 20px; stroke-width: 2.2; }
+
 </style>
 </head>
 <body>
@@ -923,7 +1125,7 @@ input[type="color"] {
         <label class="f-label">Password</label>
         <input class="f-input" type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-      <button class="btn-submit" onclick="doLogin()">Sign in →</button>
+      <button class="btn-submit" onclick="doLogin()" style="display:flex;align-items:center;justify-content:center;gap:8px;">Sign in <i data-lucide="arrow-right" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;"></i></button>
       <div class="demo-box">
         Demo — <code>demo@projectflow.app</code> / <code>password123</code><br>
         or register a new account above.
@@ -943,7 +1145,7 @@ input[type="color"] {
         <label class="f-label">Password</label>
         <input class="f-input" type="password" id="regPass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')doRegister()">
       </div>
-      <button class="btn-submit" onclick="doRegister()">Create account →</button>
+      <button class="btn-submit" onclick="doRegister()" style="display:flex;align-items:center;justify-content:center;gap:8px;">Create account <i data-lucide="arrow-right" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;"></i></button>
     </div>
   </div>
 </div>
@@ -951,14 +1153,17 @@ input[type="color"] {
 <!-- ══════════════ APP ══════════════ -->
 <div id="appScreen">
 
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-head">
-      <div class="brand"><div class="brand-mark">⚡</div>ProjectFlow</div>
+      <div class="brand"><div class="brand-mark"><i data-lucide="zap" style="width:11px;height:11px;stroke:currentColor;stroke-width:2;"></i></div>ProjectFlow</div>
     </div>
 
     <button class="new-proj" onclick="openM('mProj')">
-      <span class="new-proj-icon">+</span> New project
+      <i data-lucide="plus" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;flex-shrink:0;"></i> New project
     </button>
 
     <div class="sidebar-section">Projects</div>
@@ -971,7 +1176,7 @@ input[type="color"] {
           <div class="user-n" id="sideName">—</div>
           <div class="user-e" id="sideEmail">—</div>
         </div>
-        <button class="logout-btn" onclick="logout()">exit</button>
+        <button class="logout-btn" onclick="logout()" title="Sign out"><i data-lucide="log-out" style="width:13px;height:13px;stroke:currentColor;stroke-width:1.8;"></i></button>
       </div>
     </div>
   </aside>
@@ -981,11 +1186,11 @@ input[type="color"] {
     <header class="topbar">
       <div class="top-title" id="topTitle">No project selected</div>
       <div class="top-actions">
-        <button class="tb-ghost" id="btnMembers" style="display:none;" onclick="openMembersModal()">Members</button>
-        <button class="tb-solid" id="btnTask" style="display:none;" onclick="openM('mTask')">+ Task</button>
+        <button class="tb-ghost" id="btnMembers" style="display:none;" onclick="openMembersModal()"><i data-lucide="users" style="width:13px;height:13px;stroke:currentColor;stroke-width:1.8;"></i> Members</button>
+        <button class="tb-solid" id="btnTask" style="display:none;" onclick="openM('mTask')"><i data-lucide="plus" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;"></i> Task</button>
         <div class="notif-wrap">
           <button class="notif-btn" onclick="toggleNotif()">
-            🔔<div class="notif-badge" id="notifBadge"></div>
+            <i data-lucide="bell" style="width:14px;height:14px;stroke:currentColor;stroke-width:1.8;"></i><div class="notif-badge" id="notifBadge"></div>
           </button>
           <div class="notif-panel" id="notifPanel">
             <div class="notif-hd">Notifications</div>
@@ -996,9 +1201,9 @@ input[type="color"] {
     </header>
 
     <div id="welcomeView" class="welcome-view">
-      <div class="welcome-icon">◻</div>
+      <div class="welcome-icon"><i data-lucide="layout-kanban" style="width:32px;height:32px;stroke:currentColor;stroke-width:1.2;opacity:0.2;"></i></div>
       <div class="welcome-title">No project selected</div>
-      <div class="welcome-sub">← Pick or create a project</div>
+      <div class="welcome-sub" style="display:flex;align-items:center;gap:6px;"><i data-lucide="arrow-left" style="width:12px;height:12px;stroke:currentColor;stroke-width:2;"></i> Pick or create a project</div>
     </div>
 
     <div class="board-wrap" id="boardWrap" style="display:none;">
@@ -1047,7 +1252,7 @@ input[type="color"] {
   <div class="modal">
     <div class="modal-top">
       <div class="modal-title">New project</div>
-      <button class="modal-x" onclick="closeM('mProj')">✕</button>
+    <button class="modal-x" onclick="closeM('mProj')"><i data-lucide="x" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;"></i></button>
     </div>
     <div class="mf"><label class="ml">Name</label><input class="mi" type="text" id="pName" placeholder="My project"></div>
     <div class="mf"><label class="ml">Description</label><textarea class="mta" id="pDesc" placeholder="What is this about?"></textarea></div>
@@ -1064,7 +1269,7 @@ input[type="color"] {
   <div class="modal">
     <div class="modal-top">
       <div class="modal-title">New task</div>
-      <button class="modal-x" onclick="closeM('mTask')">✕</button>
+    <button class="modal-x" onclick="closeM('mTask')"><i data-lucide="x" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;"></i></button>
     </div>
     <div class="mf"><label class="ml">Title</label><input class="mi" type="text" id="tTitle" placeholder="What needs doing?"></div>
     <div class="mf"><label class="ml">Description</label><textarea class="mta" id="tDesc" placeholder="Details..."></textarea></div>
@@ -1088,7 +1293,7 @@ input[type="color"] {
   <div class="modal modal-wide">
     <div class="modal-top">
       <div class="modal-title">Task</div>
-      <button class="modal-x" onclick="closeM('mDetails')">✕</button>
+    <button class="modal-x" onclick="closeM('mDetails')"><i data-lucide="x" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;"></i></button>
     </div>
     <input type="hidden" id="dId">
     <div class="mf"><label class="ml">Title</label><input class="mi" type="text" id="dTitle"></div>
@@ -1138,7 +1343,7 @@ input[type="color"] {
   <div class="modal">
     <div class="modal-top">
       <div class="modal-title">Members</div>
-      <button class="modal-x" onclick="closeM('mMembers')">✕</button>
+    <button class="modal-x" onclick="closeM('mMembers')"><i data-lucide="x" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;"></i></button>
     </div>
     <div class="invite-row">
       <input class="invite-in" type="email" id="inviteEmail" placeholder="colleague@example.com" onkeydown="if(event.key==='Enter')addMember()">
@@ -1149,6 +1354,34 @@ input[type="color"] {
     <div id="memberList"></div>
   </div>
 </div>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<nav class="mobile-nav">
+  <button class="mnav-btn" id="mnavProjects" onclick="toggleSidebar()">
+    <i data-lucide="layout-grid" style="width:18px;height:18px;stroke:currentColor;stroke-width:1.8;"></i>
+    Projects
+  </button>
+  <button class="mnav-btn" id="mnavBoard" onclick="focusBoard()">
+    <i data-lucide="columns" style="width:18px;height:18px;stroke:currentColor;stroke-width:1.8;"></i>
+    Board
+  </button>
+  <button class="mnav-btn" id="mnavMembers" onclick="openMembersModal()">
+    <i data-lucide="users" style="width:18px;height:18px;stroke:currentColor;stroke-width:1.8;"></i>
+    Members
+  </button>
+  <button class="mnav-btn" onclick="toggleNotif()">
+    <div style="position:relative;display:inline-flex;">
+      <i data-lucide="bell" style="width:18px;height:18px;stroke:currentColor;stroke-width:1.8;"></i>
+      <div class="notif-badge" id="notifBadgeMobile" style="top:-5px;right:-5px;"></div>
+    </div>
+    Alerts
+  </button>
+</nav>
+
+<!-- ── FAB: add task on mobile ── -->
+<button class="fab" id="fabBtn" onclick="openM('mTask')" title="Add task">
+  <i data-lucide="plus" style="width:20px;height:20px;stroke:currentColor;stroke-width:2.2;"></i>
+</button>
 
 <div id="toast"></div>
 
@@ -1211,6 +1444,7 @@ function init() {
   document.getElementById('sideName').textContent = currentUser.name;
   document.getElementById('sideEmail').textContent = currentUser.email;
   initWS(); loadProjects(); loadNotifs();
+  lucide.createIcons();
 }
 if (token&&currentUser) {
   document.getElementById('authScreen').style.display = 'none';
@@ -1267,6 +1501,7 @@ async function loadProjects() {
     el.onclick = () => selectProject(p.id, p.name);
     list.appendChild(el);
   });
+  lucide.createIcons();
 }
 async function createProject() {
   const name = document.getElementById('pName').value.trim();
@@ -1290,7 +1525,7 @@ function selectProject(id, name) {
 
 /* ── TASKS ── */
 const COLS = {todo:'col-todo',inprogress:'col-inprogress',inreview:'col-inreview',done:'col-done'};
-const EMPTY_SYM = {todo:'○',inprogress:'◑',inreview:'◔',done:'●'};
+const EMPTY_SYM = {todo:'circle',inprogress:'loader',inreview:'eye',done:'check-circle'};
 
 async function loadTasks(projectId) {
   const r = await fetch(`/api/projects/${projectId}/tasks`,{headers:{Authorization:`Bearer ${token}`}});
@@ -1323,8 +1558,9 @@ async function loadTasks(projectId) {
   Object.entries(cnts).forEach(([k,v]) => {
     const el = document.getElementById('n-'+k);
     if (el) el.textContent = v;
-    if (v===0) document.getElementById(COLS[k]).innerHTML = `<div class="col-empty" data-symbol="${EMPTY_SYM[k]}">Empty</div>`;
+    if (v===0) document.getElementById(COLS[k]).innerHTML = `<div class="col-empty"><i data-lucide="${EMPTY_SYM[k]}" style="width:18px;height:18px;stroke:currentColor;stroke-width:1.5;opacity:0.2;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;"></i>Empty</div>`;
   });
+  lucide.createIcons();
 }
 
 async function createTask() {
@@ -1402,6 +1638,7 @@ async function loadWorkspaceUsers() {
     el.innerHTML=`<div class="m-av">${initials}</div><div class="m-info"><div class="m-name">${m.name}</div><div class="m-email">${m.email}</div></div><span class="m-role role-${m.role}">${m.role}</span>${m.role!=='owner'?`<button class="btn-danger" style="padding:4px 10px;font-size:11px;" onclick="removeMember(${m.id})">Remove</button>`:''}`;
     list.appendChild(el);
   });
+  lucide.createIcons();
 }
 async function addMember() {
   const email=document.getElementById('inviteEmail').value.trim();
@@ -1448,6 +1685,50 @@ document.addEventListener('click',e=>{
   const wrap=document.getElementById('notifPanel')?.closest('.notif-wrap');
   if (wrap&&!wrap.contains(e.target)) document.getElementById('notifPanel').style.display='none';
 });
+
+/* ── MOBILE HELPERS ── */
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  const isOpen = sb.classList.contains('drawer-open');
+  sb.classList.toggle('drawer-open', !isOpen);
+  ov.classList.toggle('open', !isOpen);
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('drawer-open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+function focusBoard() {
+  closeSidebar();
+  document.getElementById('boardWrap')?.scrollIntoView({behavior:'smooth'});
+}
+
+// Show FAB only when a project is selected
+function updateFAB() {
+  const fab = document.getElementById('fabBtn');
+  if (fab) fab.style.display = pid ? 'flex' : 'none';
+}
+
+// Sync both notif badges (topbar + mobile nav)
+const _origLoadNotifs = loadNotifs;
+async function loadNotifs() {
+  await _origLoadNotifs();
+  const mb = document.getElementById('notifBadgeMobile');
+  const tb = document.getElementById('notifBadge');
+  if (mb && tb) {
+    mb.style.display = tb.style.display;
+    mb.textContent = tb.textContent;
+  }
+}
+
+// Call updateFAB when project selected
+const _origSelectProject = selectProject;
+function selectProject(id, name) {
+  _origSelectProject(id, name);
+  updateFAB();
+  closeSidebar();
+}
+
 </script>
 </body>
 </html>
