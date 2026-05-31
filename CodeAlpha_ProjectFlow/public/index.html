@@ -1474,6 +1474,30 @@ function closeM(id) { document.getElementById(id).classList.remove('open'); }
 document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open')); });
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); }));
 
+/* ── MOBILE HELPERS (defined early so selectProject can use them) ── */
+function closeSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  if (sb) sb.classList.remove('drawer-open');
+  if (ov) ov.classList.remove('open');
+}
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  if (!sb) return;
+  const isOpen = sb.classList.contains('drawer-open');
+  sb.classList.toggle('drawer-open', !isOpen);
+  if (ov) ov.classList.toggle('open', !isOpen);
+}
+function updateFAB() {
+  const fab = document.getElementById('fabBtn');
+  if (fab) fab.style.display = pid ? 'flex' : 'none';
+}
+function focusBoard() {
+  closeSidebar();
+  document.getElementById('boardWrap')?.scrollIntoView({behavior:'smooth'});
+}
+
 /* ── TOAST ── */
 let _toastTimer;
 function toast(msg, type='ok') {
@@ -1521,6 +1545,9 @@ function selectProject(id, name) {
   document.getElementById('welcomeView').style.display = 'none';
   document.getElementById('boardWrap').style.display = 'block';
   loadTasks(id); loadWorkspaceUsers(); loadProjects();
+  // Mobile: close sidebar drawer and show FAB
+  closeSidebar();
+  updateFAB();
 }
 
 /* ── TASKS ── */
@@ -1674,6 +1701,9 @@ async function loadNotifs() {
       <div class="notif-time">${n.created_at}</div>
     </div>
   `).join('');
+  // Sync mobile nav badge
+  const mb = document.getElementById('notifBadgeMobile');
+  if (mb) { mb.style.display = notifCount > 0 ? 'flex' : 'none'; mb.textContent = notifCount; }
 }
 function toggleNotif() {
   const p=document.getElementById('notifPanel');
@@ -1686,48 +1716,6 @@ document.addEventListener('click',e=>{
   if (wrap&&!wrap.contains(e.target)) document.getElementById('notifPanel').style.display='none';
 });
 
-/* ── MOBILE HELPERS ── */
-function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('sidebarOverlay');
-  const isOpen = sb.classList.contains('drawer-open');
-  sb.classList.toggle('drawer-open', !isOpen);
-  ov.classList.toggle('open', !isOpen);
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('drawer-open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-}
-function focusBoard() {
-  closeSidebar();
-  document.getElementById('boardWrap')?.scrollIntoView({behavior:'smooth'});
-}
-
-// Show FAB only when a project is selected
-function updateFAB() {
-  const fab = document.getElementById('fabBtn');
-  if (fab) fab.style.display = pid ? 'flex' : 'none';
-}
-
-// Sync both notif badges (topbar + mobile nav)
-const _origLoadNotifs = loadNotifs;
-async function loadNotifs() {
-  await _origLoadNotifs();
-  const mb = document.getElementById('notifBadgeMobile');
-  const tb = document.getElementById('notifBadge');
-  if (mb && tb) {
-    mb.style.display = tb.style.display;
-    mb.textContent = tb.textContent;
-  }
-}
-
-// Call updateFAB when project selected
-const _origSelectProject = selectProject;
-function selectProject(id, name) {
-  _origSelectProject(id, name);
-  updateFAB();
-  closeSidebar();
-}
 
 </script>
 </body>
