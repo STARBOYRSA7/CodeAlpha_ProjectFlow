@@ -1045,10 +1045,14 @@ input[type="color"] {
   /* ── NOTIF panel full width ── */
   .notif-panel {
     position: fixed;
-    top: auto; bottom: 60px;
+    top: 56px;
+    bottom: auto;
     left: 8px; right: 8px;
     width: auto;
+    max-height: 60vh;
+    overflow-y: auto;
     border-radius: var(--r-lg);
+    z-index: 400;
   }
 
   /* ── AUTH card ── */
